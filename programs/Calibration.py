@@ -24,6 +24,10 @@ brick.screen.print("Press the touch\nsensor to continue.")
 while not touch.pressed():
     wait(10)
 
+while touch.pressed():
+    wait(10)
+
+
 throttle.reset_angle(0)
 autobrake.reset_angle(0)
 indbrake.reset_angle(0)
@@ -34,6 +38,10 @@ brick.speaker.beep()
 brick.screen.print("Press the touch\nsensor to continue.")
 while not touch.pressed():
     wait(10)
+
+while touch.pressed():
+    wait(10)
+
 
 throttlemax = throttle.angle()
 autobrakemax = autobrake.angle()
