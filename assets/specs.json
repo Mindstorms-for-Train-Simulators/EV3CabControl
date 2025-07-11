@@ -1,5 +1,5 @@
 {
-    "autobrake": 0, 
-    "throttle": 0, 
-    "indbrake": 0
+    "autobrake": 160, 
+    "throttle": 160, 
+    "indbrake": 180
 }

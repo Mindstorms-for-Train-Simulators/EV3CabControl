@@ -67,14 +67,13 @@ brick.screen.clear()
 brick.screen.print("Calibration complete!")
 brick.screen.print("Exit the program by\npressing the back\nbutton")
 brick.speaker.beep()
-
-while not touch.pressed():
-    wait(10)
-
-brick.screen.clear()
 brick.screen.print("In debugging mode.")
 
 while True:
+    if Button.CENTER in brick.buttons.pressed():
+        print("Exited debugging mode.")
+        break
+
     print("----------------------------------------------------")
     print(brick.buttons.pressed())
     print(str(beacon.buttons(1)) + ", " + str(beacon.buttons(2)) + ", " + str(beacon.buttons(3)) + ", " + str(beacon.buttons(4)))
