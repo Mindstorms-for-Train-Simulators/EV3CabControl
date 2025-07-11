@@ -10,11 +10,11 @@ import json
 throttle = Motor(Port.A)
 autobrake = Motor(Port.B)
 indbrake = Motor(Port.C)
-reverser = ColorSensor(Port.S1)
+reverser = ColorSensor(Port.S2)
 
 # Buttons
-touch = TouchSensor(Port.S2)
-beacon = InfraredSensor(Port.S3)
+touch = TouchSensor(Port.S3)
+beacon = InfraredSensor(Port.S4)
 brick = EV3Brick()
 
 brick.screen.clear()
