@@ -91,6 +91,8 @@ def handle_buttons(mapping, index_map, prev_map):
 while True:
     if Button.CENTER in brick.buttons.pressed():
         break
+    else:
+        ev3.screen.load_image(Image("assets\images\TSC S7+1 Stock.png"))
     
     levers = [scrunch(throttle, throttleMAX), None, None]
     keys = handle_buttons(buttons, sequence_index, prev_pressed)
