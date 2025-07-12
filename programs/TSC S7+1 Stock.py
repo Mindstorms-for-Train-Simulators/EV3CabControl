@@ -1,8 +1,9 @@
 #!/usr/bin/env pybricks-micropython
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import Motor, TouchSensor, ColorSensor, InfraredSensor
-from pybricks.parameters import Port, Button
+from pybricks.parameters import Port, Button, Color
 from pybricks.tools import wait
+
 import json
 
 # Initialize hardware
@@ -35,22 +36,20 @@ buttons = {
         "touch": ("Shift+W", "Shift+S")
     },
     0: {
-        Button.UP: ("B"),
-        Button.DOWN: (" "),
-        Button.LEFT: ("Left"),
-        Button.RIGHT: (" Right")
+        Button.UP: (" "),
+        Button.DOWN: ("B"),
+        Button.LEFT: ("Left",),
+        Button.RIGHT: ("Right",)
     },
     1: {
-        Button.LEFT_UP: ("U", "R"),
-        Button.RIGHT_UP: ("O", "R"),
+        Button.LEFT_UP: ("T+U", "R"),
+        Button.RIGHT_UP: ("T+O", "R"),
         Button.LEFT_DOWN: ("Ctrl+U", "Shift+U"),
         Button.RIGHT_DOWN: ("Ctrl+O", "Shift+O")
     }, 
     2: {
         Button.LEFT_UP: ("V"),
-        Button.RIGHT_UP: (),
-        Button.LEFT_DOWN: ("Shift+V"),
-        Button.RIGHT_DOWN: ()
+        Button.LEFT_DOWN: ("Shift+V",)
     }, 
     3: {
 
@@ -76,26 +75,86 @@ def get_buttons(channel):
 # Handle all inputs
 def handle_buttons(mapping, index_map, prev_map):
     output = []
+
     for ch in mapping:
         current = get_buttons(ch)
+
         for btn, sequence in mapping[ch].items():
-            pressed = btn in current
-            if pressed and not prev_map[ch][btn]:
+            is_pressed = btn in current
+            was_pressed = prev_map[ch][btn]
+
+            # If button is currently pressed
+            if is_pressed:
+                # Always output the current sequence key while held
                 key = sequence[index_map[ch][btn]]
                 output.append(key)
-                if len(sequence) > 1:
+
+                # If this is a new press (rising edge), advance sequence
+                if not was_pressed and len(sequence) > 1:
                     index_map[ch][btn] = (index_map[ch][btn] + 1) % len(sequence)
-            prev_map[ch][btn] = pressed
+
+            # Update previous press state
+            prev_map[ch][btn] = is_pressed
+
     return output
 
+def setMCS():
+    mcpos = scrunch(indbrake, indbrakeMAX)
+    if mcpos == -100:
+        # Shutdown
+        return 1
+    elif mcpos < -60:
+        # Protected Manual
+        return 2
+    elif mcpos < -20:
+        # Auto
+        return 3
+    elif mcpos < 20:
+        # Tripcock - use for driving
+        return 4
+    elif mcpos < 60:
+        # Forward
+        return 5
+    elif mcpos < 80:
+        # Protected Manual
+        return 6
+    elif mcpos < 100:
+        # Inter
+        return 7
+    else:
+        #lever at 100, reverse.
+        return 8
+
+brick.screen.load_image("assets/images/TSC S7+1 Stock.png")
+
+print(["ThrottleAndBrake"])
+
+deadman = False
+mcs = 1 # 1-8 (1=shutdown)
 while True:
     if Button.CENTER in brick.buttons.pressed():
+        print("Program ended by center button")
         break
-    else:
-        ev3.screen.load_image(Image("assets\images\TSC S7+1 Stock.png"))
     
-    levers = [scrunch(throttle, throttleMAX), None, None]
-    keys = handle_buttons(buttons, sequence_index, prev_pressed)
-    masterList = [levers, keys]
+    masterList = [[scrunch(throttle, throttleMAX), None, None], handle_buttons(buttons, sequence_index, prev_pressed)]
+
+    # Check deadman
+    if not deadman and reverser.color() == Color.WHITE:
+        masterList[1].append("Shift+E")
+        deadman = True
+    elif deadman and reverser.color() == Color.BLACK:
+        masterList[1].append("Shift+E") 
+        deadman = False
+
+    # Check MCS
+    target = setMCS()
+    if target != mcs:
+        if target > mcs:
+            masterList[1].append("W")
+            mcs = mcs + 1
+        elif target < mcs:
+            masterList[1].append("S")
+            mcs = mcs - 1
+
     print(masterList)
-    wait(10)
+    wait(5)
