@@ -5,6 +5,7 @@ from pybricks.parameters import Port, Button, Color
 from pybricks.tools import wait
 
 import json
+import socket
 
 # Initialize hardware
 brick = EV3Brick()
@@ -21,14 +22,6 @@ with open("assets/specs.json", "r") as f:
 throttleMAX = specs.get("throttle")
 autobrakeMAX = specs.get("autobrake")
 indbrakeMAX = specs.get("indbrake")
-
-# Normalize lever input
-def scrunch(motor, max_val):
-    if not max_val:
-        return 0  # avoid division if config is missing or zero
-    angle = motor.angle()
-    s = (min(max(angle / max_val * 100, 0), 100) - 50) * 2
-    return 0 if -5 < s < 5 else 95 + (s - 95) if s > 95 else -95 - (-95 - s) if s < -95 else s
 
 # Unified button map (channel: {button: (sequence)})
 buttons = {
@@ -58,6 +51,19 @@ buttons = {
 
     }  
 }
+
+HOST = "10.0.1.2"
+PORT = 1337
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((HOST, PORT))
+
+# Normalize lever input
+def scrunch(motor, max_val):
+    if not max_val:
+        return 0  # avoid division if config is missing or zero
+    angle = motor.angle()
+    s = (min(max(angle / max_val * 100, 0), 100) - 50) * 2
+    return 0 if -5 < s < 5 else 95 + (s - 95) if s > 95 else -95 - (-95 - s) if s < -95 else s
 
 # State trackers
 sequence_index = {ch: {btn: 0 for btn in buttons[ch]} for ch in buttons}
@@ -127,34 +133,46 @@ def setMCS():
 
 brick.screen.load_image("assets/images/TSC S7+1 Stock.png")
 
-print(["ThrottleAndBrake"])
+sock.send(json.dumps({
+    "type": "CONFIG",
+    "config": ["ThrottleAndBrake"]
+}).encode())
 
 deadman = False
 mcs = 1 # 1-8 (1=shutdown)
 while True:
     if Button.CENTER in brick.buttons.pressed():
-        print("Program ended by center button")
+        sock.send(json.dumps({
+            "type": "END",
+        }).encode())
+        sock.close()
         break
     
-    masterList = [[scrunch(throttle, throttleMAX), None, None], handle_buttons(buttons, sequence_index, prev_pressed)]
+    buttonsList = [handle_buttons(buttons, sequence_index, prev_pressed)]
 
+
+    # Special Stuff
     # Check deadman
     if not deadman and reverser.color() == Color.WHITE:
-        masterList[1].append("Shift+E")
+        buttonsList.append("Shift+E")
         deadman = True
     elif deadman and reverser.color() == Color.BLACK:
-        masterList[1].append("Shift+E") 
+        buttonsList.append("Shift+E") 
         deadman = False
 
     # Check MCS
     target = setMCS()
     if target != mcs:
         if target > mcs:
-            masterList[1].append("W")
+            buttonsList.append("W")
             mcs = mcs + 1
         elif target < mcs:
-            masterList[1].append("S")
+            buttonsList.append("S")
             mcs = mcs - 1
 
-    print(masterList)
+    sock.send(json.dumps({
+        "type": "DATA",
+        "levers": [scrunch(throttle, throttleMAX), None, None],
+        "buttons": buttonsList
+    }).encode())
     wait(5)
