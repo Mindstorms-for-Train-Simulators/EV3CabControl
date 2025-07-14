@@ -22,6 +22,8 @@ with open("assets/specs.json", "r") as f:
 throttleMAX = specs.get("throttle")
 autobrakeMAX = specs.get("autobrake")
 indbrakeMAX = specs.get("indbrake")
+HOST = specs.get("HOST")
+PORT = specs.get("POST")
 
 # Unified button map (channel: {button: (sequence)})
 buttons = {
@@ -52,8 +54,6 @@ buttons = {
     }  
 }
 
-HOST = "10.0.1.2"
-PORT = 1337
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((HOST, PORT))
 
