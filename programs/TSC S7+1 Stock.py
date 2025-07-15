@@ -31,7 +31,7 @@ buttons = {
         "touch": ("Shift+W", "Shift+S")
     },
     0: {
-        Button.UP: (" "),
+        Button.UP: ("Space"),
         Button.DOWN: ("B"),
         Button.LEFT: ("Left",),
         Button.RIGHT: ("Right",)
