@@ -22,8 +22,9 @@ with open("assets/specs.json", "r") as f:
 throttleMAX = specs.get("throttle")
 autobrakeMAX = specs.get("autobrake")
 indbrakeMAX = specs.get("indbrake")
-HOST = specs.get("HOST")
-PORT = specs.get("POST")
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((specs.get("HOST"), specs.get("PORT")))
 
 # Unified button map (channel: {button: (sequence)})
 buttons = {
@@ -31,7 +32,7 @@ buttons = {
         "touch": ("Shift+W", "Shift+S")
     },
     0: {
-        Button.UP: ("Space"),
+        Button.UP: ("Space",),
         Button.DOWN: ("B"),
         Button.LEFT: ("Left",),
         Button.RIGHT: ("Right",)
@@ -53,9 +54,6 @@ buttons = {
 
     }  
 }
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect((HOST, PORT))
 
 # Normalize lever input
 def scrunch(motor, max_val):
@@ -89,15 +87,14 @@ def handle_buttons(mapping, index_map, prev_map):
             is_pressed = btn in current
             was_pressed = prev_map[ch][btn]
 
-            # If button is currently pressed
+            # Output current sequence while button is held
             if is_pressed:
-                # Always output the current sequence key while held
                 key = sequence[index_map[ch][btn]]
                 output.append(key)
 
-                # If this is a new press (rising edge), advance sequence
-                if not was_pressed and len(sequence) > 1:
-                    index_map[ch][btn] = (index_map[ch][btn] + 1) % len(sequence)
+            # Advance sequence only after full release + next press (falling edge then rising edge)
+            if was_pressed and not is_pressed and len(sequence) > 1:
+                index_map[ch][btn] = (index_map[ch][btn] + 1) % len(sequence)
 
             # Update previous press state
             prev_map[ch][btn] = is_pressed
