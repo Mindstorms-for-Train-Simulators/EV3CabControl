@@ -33,7 +33,7 @@ buttons = {
     },
     0: {
         Button.UP: ("Space",),
-        Button.DOWN: ("B"),
+        Button.DOWN: ("B",),
         Button.LEFT: ("Left",),
         Button.RIGHT: ("Right",)
     },
@@ -44,7 +44,7 @@ buttons = {
         Button.RIGHT_DOWN: ("Ctrl+O", "Shift+O")
     }, 
     2: {
-        Button.LEFT_UP: ("V"),
+        Button.LEFT_UP: ("V",),
         Button.LEFT_DOWN: ("Shift+V",)
     }, 
     3: {
@@ -139,6 +139,7 @@ sock.send(json.dumps({
 
 deadman = False
 mcs = 1 # 1-8 (1=shutdown)
+
 while True:
     if Button.CENTER in brick.buttons.pressed():
         sock.send(json.dumps({
@@ -148,7 +149,6 @@ while True:
         break
     
     buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
-
 
     # Special Stuff
     # Check deadman
@@ -176,4 +176,5 @@ while True:
         "right": None,
         "buttons": buttonsList
     }).encode())
+
     wait(5)
