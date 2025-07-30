@@ -147,7 +147,7 @@ while True:
         sock.close()
         break
     
-    buttonsList = [handle_buttons(buttons, sequence_index, prev_pressed)]
+    buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
 
 
     # Special Stuff
@@ -171,7 +171,9 @@ while True:
 
     sock.send(json.dumps({
         "type": "DATA",
-        "levers": [scrunch(throttle, throttleMAX), None, None],
+        "left": scrunch(throttle, throttleMAX),
+        "middle": None,
+        "right": None,
         "buttons": buttonsList
     }).encode())
     wait(5)
