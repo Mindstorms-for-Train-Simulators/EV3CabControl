@@ -132,7 +132,9 @@ brick.screen.load_image("assets/images/TSC S7+1 Stock.png")
 
 sock.send(json.dumps({
     "type": "CONFIG",
-    "config": ["ThrottleAndBrake"]
+    "left": "ThrottleAndBrake",
+    "middle": None,
+    "right": None
 }).encode())
 
 deadman = False
