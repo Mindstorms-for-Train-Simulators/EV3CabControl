@@ -9,19 +9,19 @@ import socket
 
 # Initialize hardware
 brick = EV3Brick()
-throttle = Motor(Port.A)
-autobrake = Motor(Port.B)
-indbrake = Motor(Port.C)
-reverser = ColorSensor(Port.S2)
+leftLever = Motor(Port.A)
+middleLever = Motor(Port.B)
+rightLever = Motor(Port.C)
+color = ColorSensor(Port.S2)
 touch = TouchSensor(Port.S3)
 beacon = InfraredSensor(Port.S4)
 
 # Load configuration
 with open("assets/specs.json", "r") as f:
     specs = json.load(f)
-throttleMAX = specs.get("throttle")
-autobrakeMAX = specs.get("autobrake")
-indbrakeMAX = specs.get("indbrake")
+leftLeverMAX = specs.get("left")
+middleLeverMAX = specs.get("middle")
+rightLeverMAX = specs.get("right")
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((specs.get("HOST"), specs.get("PORT")))
@@ -102,7 +102,7 @@ def handle_buttons(mapping, index_map, prev_map):
     return output
 
 def setMCS():
-    mcpos = scrunch(indbrake, indbrakeMAX)
+    mcpos = scrunch(rightLever, rightLeverMAX)
     if mcpos == -100:
         # Shutdown
         return 1
@@ -152,10 +152,10 @@ while True:
 
     # Special Stuff
     # Check deadman
-    if not deadman and reverser.color() == Color.WHITE:
+    if not deadman and color.color() == Color.WHITE:
         buttonsList.append("Shift+E")
         deadman = True
-    elif deadman and reverser.color() == Color.BLACK:
+    elif deadman and color.color() == Color.BLACK:
         buttonsList.append("Shift+E") 
         deadman = False
 
@@ -171,7 +171,7 @@ while True:
 
     sock.send(json.dumps({
         "type": "DATA",
-        "left": scrunch(throttle, throttleMAX),
+        "left": scrunch(leftLever, leftLeverMAX),
         "middle": None,
         "right": None,
         "buttons": buttonsList
