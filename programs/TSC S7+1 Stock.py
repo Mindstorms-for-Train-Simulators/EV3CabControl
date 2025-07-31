@@ -101,44 +101,16 @@ def handle_buttons(mapping, index_map, prev_map):
 
     return output
 
-def setMCS():
-    mcpos = scrunch(rightLever, rightLeverMAX)
-    if mcpos == -100:
-        # Shutdown
-        return 1
-    elif mcpos < -60:
-        # Protected Manual
-        return 2
-    elif mcpos < -20:
-        # Auto
-        return 3
-    elif mcpos < 20:
-        # Tripcock - use for driving
-        return 4
-    elif mcpos < 60:
-        # Forward
-        return 5
-    elif mcpos < 80:
-        # Protected Manual
-        return 6
-    elif mcpos < 100:
-        # Inter
-        return 7
-    else:
-        #lever at 100, reverse.
-        return 8
-
 brick.screen.load_image("assets/images/TSC S7+1 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
     "left": "ThrottleAndBrake",
     "middle": None,
-    "right": None
+    "right": "Reverser"
 }) + "\n").encode())
 
 deadman = False
-mcs = 1 # 1-8 (1=shutdown)
 
 while True:
     if Button.CENTER in brick.buttons.pressed():
@@ -159,21 +131,11 @@ while True:
         buttonsList.append("Shift+E") 
         deadman = False
 
-    # Check MCS
-    target = setMCS()
-    if target != mcs:
-        if target > mcs:
-            buttonsList.append("W")
-            mcs = mcs + 1
-        elif target < mcs:
-            buttonsList.append("S")
-            mcs = mcs - 1
-
     sock.send((json.dumps({
         "type": "DATA",
         "left": scrunch(leftLever, leftLeverMAX),
         "middle": None,
-        "right": None,
+        "right": (-1 * scrunch(rightLever, rightLeverMAX)),
         "buttons": buttonsList
     }) + "\n").encode())
 
