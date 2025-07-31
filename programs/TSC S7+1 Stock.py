@@ -29,23 +29,23 @@ sock.connect((specs.get("HOST"), specs.get("PORT")))
 # Unified button map (channel: {button: (sequence)})
 buttons = {
     -1: {
-        "touch": ("Shift+W", "Shift+S")
+        "touch": ("shift+w", "shift+s")
     },
     0: {
-        Button.UP: ("Space",),
-        Button.DOWN: ("B",),
-        Button.LEFT: ("Left",),
-        Button.RIGHT: ("Right",)
+        Button.UP: ("space",),
+        Button.DOWN: ("b",),
+        Button.LEFT: ("left",),
+        Button.RIGHT: ("right",)
     },
     1: {
-        Button.LEFT_UP: ("T+U", "R"),
-        Button.RIGHT_UP: ("T+O", "R"),
-        Button.LEFT_DOWN: ("Ctrl+U", "Shift+U"),
-        Button.RIGHT_DOWN: ("Ctrl+O", "Shift+O")
+        Button.LEFT_UP: ("t+u", "r"),
+        Button.RIGHT_UP: ("t+o", "r"),
+        Button.LEFT_DOWN: ("ctrl+u", "shift+u"),
+        Button.RIGHT_DOWN: ("ctrl+o", "shift+o")
     }, 
     2: {
-        Button.LEFT_UP: ("V",),
-        Button.LEFT_DOWN: ("Shift+V",)
+        Button.LEFT_UP: ("v",),
+        Button.LEFT_DOWN: ("shift+v",)
     }, 
     3: {
 
@@ -130,21 +130,21 @@ def setMCS():
 
 brick.screen.load_image("assets/images/TSC S7+1 Stock.png")
 
-sock.send(json.dumps({
+sock.send((json.dumps({
     "type": "CONFIG",
     "left": "ThrottleAndBrake",
     "middle": None,
     "right": None
-}).encode())
+}) + "\n").encode())
 
 deadman = False
 mcs = 1 # 1-8 (1=shutdown)
 
 while True:
     if Button.CENTER in brick.buttons.pressed():
-        sock.send(json.dumps({
+        sock.send((json.dumps({
             "type": "END",
-        }).encode())
+        }) + "\n").encode())
         sock.close()
         break
     
@@ -169,12 +169,12 @@ while True:
             buttonsList.append("S")
             mcs = mcs - 1
 
-    sock.send(json.dumps({
+    sock.send((json.dumps({
         "type": "DATA",
         "left": scrunch(leftLever, leftLeverMAX),
         "middle": None,
         "right": None,
         "buttons": buttonsList
-    }).encode())
+    }) + "\n").encode())
 
     wait(5)
