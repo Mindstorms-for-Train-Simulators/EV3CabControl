@@ -29,18 +29,17 @@ sock.connect((specs.get("HOST"), specs.get("PORT")))
 # Unified button map (channel: {button: (sequence)})
 buttons = {
     -1: {
+        "touch": ("ctrl+w",)
     },
     0: {
         Button.UP: ("space",),
         Button.DOWN: ("n",),
         Button.LEFT: ("q",),
-        Button.RIGHT: ("backspace",),
+        Button.RIGHT: ("backspace", "shift+backspace"),
     },
     1: {
         Button.LEFT_UP: ("y",),
-        Button.RIGHT_UP: ("u",),
-        Button.LEFT_DOWN: ("ctrl+u", "shift+u"),
-        Button.RIGHT_DOWN: ("ctrl+o", "shift+o")
+        Button.RIGHT_UP: ("u",)
     }, 
     2: {
         Button.LEFT_UP: ("v",),
@@ -53,7 +52,10 @@ buttons = {
         Button.RIGHT_DOWN: ("i",)
     }, 
     4: {
-
+        Button.LEFT_UP: ("1",),
+        Button.RIGHT_UP: ("2",),
+        Button.LEFT_DOWN: ("3",),
+        Button.RIGHT_DOWN: ("8",)
     }  
 }
 
@@ -103,13 +105,14 @@ def handle_buttons(mapping, index_map, prev_map):
 
     return output
 
-brick.screen.load_image("assets\images\TSW 1972 Stock.png")
+brick.screen.load_image("assets/images/TSW 1972 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
     "left": "ThrottleAndBrake",
     "middle": None,
-    "right": "Reverser"
+    "right": "Reverser",
+    "color": None
 }) + "\n").encode())
 
 deadman = False
@@ -129,6 +132,7 @@ while True:
         "left": scrunch(leftLever, leftLeverMAX),
         "middle": None,
         "right": (-1 * scrunch(rightLever, rightLeverMAX)),
+        "color": None,
         "buttons": buttonsList
     }) + "\n").encode())
 

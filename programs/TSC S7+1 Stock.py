@@ -51,7 +51,10 @@ buttons = {
 
     }, 
     4: {
-
+        Button.LEFT_UP: ("1",),
+        Button.RIGHT_UP: ("2",),
+        Button.LEFT_DOWN: ("3",),
+        Button.RIGHT_DOWN: ("8",)
     }  
 }
 
@@ -107,7 +110,8 @@ sock.send((json.dumps({
     "type": "CONFIG",
     "left": "ThrottleAndBrake",
     "middle": None,
-    "right": "Reverser"
+    "right": "Reverser",
+    "color": None
 }) + "\n").encode())
 
 deadman = False
@@ -136,6 +140,7 @@ while True:
         "left": scrunch(leftLever, leftLeverMAX),
         "middle": None,
         "right": (-1 * scrunch(rightLever, rightLeverMAX)),
+        "color": None,
         "buttons": buttonsList
     }) + "\n").encode())
 
