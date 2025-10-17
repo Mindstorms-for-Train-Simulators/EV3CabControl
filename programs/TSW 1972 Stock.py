@@ -43,7 +43,9 @@ buttons = {
     }, 
     2: {
         Button.LEFT_UP: ("v",),
-        Button.LEFT_DOWN: ("shift+v",)
+        Button.LEFT_DOWN: ("shift+v",),
+        Button.RIGHT_DOWN: ("f7",),
+        Button.RIGHT_UP: ("f8",)
     }, 
     3: {
         Button.LEFT_UP: ("h",),
@@ -131,7 +133,7 @@ while True:
         "type": "DATA",
         "left": scrunch(leftLever, leftLeverMAX),
         "middle": None,
-        "right": (-1 * scrunch(rightLever, rightLeverMAX)),
+        "right": scrunch(rightLever, rightLeverMAX),
         "color": None,
         "buttons": buttonsList
     }) + "\n").encode())
