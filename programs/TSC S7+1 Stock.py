@@ -43,8 +43,8 @@ buttons = {
         Button.RIGHT_DOWN: ("ctrl+o", "shift+o")
     }, 
     2: {
-        Button.RIGHT_UP: ("v",),
-        Button.RIGHT_DOWN: ("shift+v",)
+        Button.LEFT_UP: ("v",),
+        Button.LEFT_DOWN: ("shift+v",)
     }, 
     3: {
 

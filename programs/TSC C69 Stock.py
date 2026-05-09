@@ -44,15 +44,13 @@ buttons = {
         Button.RIGHT_DOWN: ("shift+o",)
     }, 
     2: {
-        Button.LEFT_UP: ("shift+c",),
         Button.RIGHT_UP: ("page up",),
-        Button.LEFT_DOWN: ("shift+w",)
         Button.RIGHT_DOWN: ("page down",)
     }, 
     3: {
         Button.LEFT_UP: ("h", "shift+h",),
         Button.RIGHT_UP: ("shift+l",),
-        Button.LEFT_DOWN: ("l", "k",),
+        Button.LEFT_DOWN: ("l",),
         Button.RIGHT_DOWN: ("ctrl+shift+v",)
     }, 
     4: { # Cameras
@@ -109,12 +107,12 @@ def handle_buttons(mapping, index_map, prev_map):
 
     return output
 
-brick.screen.load_image("assets/images/TSC D78 Stock.png")
+brick.screen.load_image("assets/images/TSC C69 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
-    "left": None,
-    "middle": "ThrottleAndBrake",
+    "left": "ThrottleAndBrake",
+    "middle": None,
     "right": "Reverser",
     "color": None
 }) + "\n").encode())
@@ -142,8 +140,8 @@ while True:
 
     sock.send((json.dumps({
         "type": "DATA",
-        "left": None,
-        "middle": scrunch(middleLever, middleLeverMAX),
+        "left": scrunch(leftLever, leftLeverMAX),
+        "middle": None,
         "right": (-1 * scrunch(rightLever, rightLeverMAX)),
         "color": None,
         "buttons": buttonsList
