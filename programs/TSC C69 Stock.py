@@ -50,7 +50,7 @@ buttons = {
     3: {
         Button.LEFT_UP: ("h", "shift+h",),
         Button.RIGHT_UP: ("shift+l",),
-        Button.LEFT_DOWN: ("l",),
+        Button.LEFT_DOWN: ("l", "l", "l", "k", "k", "k",),
         Button.RIGHT_DOWN: ("ctrl+shift+v",)
     }, 
     4: { # Cameras
@@ -142,7 +142,7 @@ while True:
         "type": "DATA",
         "left": scrunch(leftLever, leftLeverMAX),
         "middle": None,
-        "right": (-1 * scrunch(rightLever, rightLeverMAX)),
+        "right": scrunch(rightLever, rightLeverMAX),
         "color": None,
         "buttons": buttonsList
     }) + "\n").encode())

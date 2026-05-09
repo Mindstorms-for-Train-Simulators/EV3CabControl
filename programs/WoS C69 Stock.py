@@ -29,47 +29,32 @@ sock.connect((specs.get("HOST"), specs.get("PORT")))
 # Unified button map (channel: {button: (sequence)})
 buttons = {
     -1: {
-        "touch": ("ctrl+shift+s",)
+        "touch": ("c",)
     },
     0: {
-        Button.UP: ("space",),
-        Button.DOWN: ("ctrl+=",),
-        Button.LEFT: ("v",),
-        Button.RIGHT: ("right",)
+        Button.UP: ("h",),
+        Button.LEFT: ("x",)
     },
     1: {
-        Button.LEFT_UP: ("t",),
-        Button.RIGHT_UP: ("t",),
-        Button.LEFT_DOWN: ("shift+n",),
-        Button.RIGHT_DOWN: ("shift+o",)
+        Button.LEFT_UP: ("f5",),
+        Button.RIGHT_UP: ("f6",),
+        Button.LEFT_DOWN: ("f7",),
+        Button.RIGHT_DOWN: ("f8",)
     }, 
     2: {
-        Button.LEFT_UP: ("shift+c",),
-        Button.RIGHT_UP: ("page up",),
-        Button.LEFT_DOWN: ("shift+w",),
-        Button.RIGHT_DOWN: ("page down",)
     }, 
     3: {
-        Button.LEFT_UP: ("h", "shift+h",),
-        Button.RIGHT_UP: ("shift+l",),
-        Button.LEFT_DOWN: ("l", "k",),
-        Button.RIGHT_DOWN: ("ctrl+shift+v",)
+        Button.LEFT_UP: ("l",),
+        Button.RIGHT_UP: ("0",),
+        Button.LEFT_DOWN: ("9",),
+        Button.RIGHT_DOWN: ("b+v",)
     }, 
-    4: { # Cameras
-        Button.LEFT_UP: ("1",),
-        Button.RIGHT_UP: ("2",),
-        Button.LEFT_DOWN: ("3",),
-        Button.RIGHT_DOWN: ("8",)
+    4: {
+        Button.LEFT_UP: ("end",),
+        Button.RIGHT_UP: ("down",),
+        Button.LEFT_DOWN: ("page down",)
     }  
 }
-
-# Normalize lever input
-def scrunch(motor, max_val):
-    if not max_val:
-        return 0  # avoid division if config is missing or zero
-    angle = motor.angle()
-    s = (min(max(angle / max_val * 100, 0), 100) - 50) * 2
-    return 0 if -5 < s < 5 else 95 + (s - 95) if s > 95 else -95 - (-95 - s) if s < -95 else s
 
 # State trackers
 sequence_index = {ch: {btn: 0 for btn in buttons[ch]} for ch in buttons}
@@ -109,17 +94,17 @@ def handle_buttons(mapping, index_map, prev_map):
 
     return output
 
-brick.screen.load_image("assets/images/TSC D78 Stock.png")
+brick.screen.load_image("assets/images/TSC C69 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
     "left": None,
-    "middle": "ThrottleAndBrake",
-    "right": "Reverser",
+    "middle": None,
+    "right": None,
     "color": None
 }) + "\n").encode())
 
-handbrake = False
+deadman = False
 
 while True:
     if Button.CENTER in brick.buttons.pressed():
@@ -132,19 +117,19 @@ while True:
     buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
 
     # Special Stuff
-    # Check handbrake
-    if not handbrake and color.color() == Color.WHITE:
-        buttonsList.append("/")
-        handbrake = True
-    elif handbrake and color.color() == Color.BLACK:
-        buttonsList.append("/") 
-        handbrake = False
+    # Check deadman
+    if not deadman and color.color() == Color.WHITE:
+        buttonsList.append("tab")
+        deadman = True
+    elif deadman and color.color() == Color.BLACK:
+        buttonsList.append("tab") 
+        deadman = False
 
     sock.send((json.dumps({
         "type": "DATA",
         "left": None,
-        "middle": scrunch(middleLever, middleLeverMAX),
-        "right": scrunch(rightLever, rightLeverMAX),
+        "middle": None,
+        "right": None,
         "color": None,
         "buttons": buttonsList
     }) + "\n").encode())

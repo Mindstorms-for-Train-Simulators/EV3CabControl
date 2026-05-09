@@ -107,7 +107,7 @@ def handle_buttons(mapping, index_map, prev_map):
 
     return output
 
-brick.screen.load_image("assets/images/TSC 1973 Stock.png")
+brick.screen.load_image("assets/images/TSC C69 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
@@ -142,7 +142,7 @@ while True:
         "type": "DATA",
         "left": scrunch(leftLever, leftLeverMAX),
         "middle": None,
-        "right": (-1 * scrunch(rightLever, rightLeverMAX)),
+        "right": scrunch(rightLever, rightLeverMAX),
         "color": None,
         "buttons": buttonsList
     }) + "\n").encode())
