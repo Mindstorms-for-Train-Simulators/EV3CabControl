@@ -34,7 +34,6 @@ buttons = {
     0: {
         Button.UP: ("space",),
         Button.DOWN: ("b",),
-        Button.LEFT: ("left",),
         Button.RIGHT: ("right",)
     },
     1: {
@@ -44,8 +43,8 @@ buttons = {
         Button.RIGHT_DOWN: ("ctrl+o", "shift+o")
     }, 
     2: {
-        Button.LEFT_UP: ("v",),
-        Button.LEFT_DOWN: ("shift+v",)
+        Button.RIGHT_UP: ("v",),
+        Button.RIGHT_DOWN: ("shift+v",)
     }, 
     3: {
 
@@ -129,10 +128,10 @@ while True:
     # Special Stuff
     # Check deadman
     if not deadman and color.color() == Color.WHITE:
-        buttonsList.append("Shift+E")
+        buttonsList.append("shift+e")
         deadman = True
     elif deadman and color.color() == Color.BLACK:
-        buttonsList.append("Shift+E") 
+        buttonsList.append("shift+e") 
         deadman = False
 
     sock.send((json.dumps({

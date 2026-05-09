@@ -29,31 +29,32 @@ sock.connect((specs.get("HOST"), specs.get("PORT")))
 # Unified button map (channel: {button: (sequence)})
 buttons = {
     -1: {
-        "touch": ("ctrl+w",)
+        "touch": ("ctrl+shift+s",)
     },
     0: {
         Button.UP: ("space",),
-        Button.DOWN: ("b",),
-        Button.LEFT: ("x",),
-        Button.RIGHT: ("backspace",)
+        Button.DOWN: ("ctrl+=",),
+        Button.LEFT: ("pgup",),
+        Button.RIGHT: ("right",)
     },
     1: {
-        Button.LEFT_UP: ("y",),
-        Button.RIGHT_UP: ("u",)
+        Button.LEFT_UP: ("t",),
+        Button.RIGHT_UP: ("t",),
+        Button.LEFT_DOWN: ("shift+n",),
+        Button.RIGHT_DOWN: ("shift+o",)
     }, 
     2: {
-        Button.LEFT_UP: ("v",),
-        Button.LEFT_DOWN: ("shift+v",),
-        Button.RIGHT_UP: ("p",),
-        Button.RIGHT_DOWN: ("shift+p",)
+        Button.LEFT_UP: ("shift+c",),
+        Button.LEFT_DOWN: ("shift+w",),
+        Button.RIGHT_DOWN: ("v",)
     }, 
     3: {
-        Button.LEFT_UP: ("h",),
-        Button.RIGHT_UP: ("l",),
-        Button.LEFT_DOWN: ("j",),
-        Button.RIGHT_DOWN: ("i",)
+        Button.LEFT_UP: ("h", "shift+h",),
+        Button.RIGHT_UP: ("shift+l",),
+        Button.LEFT_DOWN: ("l", "k",),
+        Button.RIGHT_DOWN: ("ctrl+shift+v",)
     }, 
-    4: {
+    4: { # Cameras
         Button.LEFT_UP: ("1",),
         Button.RIGHT_UP: ("2",),
         Button.LEFT_DOWN: ("3",),
@@ -107,17 +108,17 @@ def handle_buttons(mapping, index_map, prev_map):
 
     return output
 
-brick.screen.load_image("assets/images/TSW ALP-46.png")
+brick.screen.load_image("assets/images/TSC D78 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
-    "left": "ThrottleAndBrake",
-    "middle": "TrainBrake",
-    "right": "LocoBrake",
-    "color": "Reverser"
+    "left": None,
+    "middle": "ThrottleAndBrake",
+    "right": "Reverser",
+    "color": None
 }) + "\n").encode())
 
-deadman = False
+handbrake = False
 
 while True:
     if Button.CENTER in brick.buttons.pressed():
@@ -129,20 +130,21 @@ while True:
     
     buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
 
-    reverser = 0
-    if color.color() == Color.WHITE:
-        reverser = -100
-    elif color.color() == Color.YELLOW:
-        reverser = -30
-    elif color.color() == Color.BLACK:
-        reverser = 15
+    # Special Stuff
+    # Check handbrake
+    if not handbrake and color.color() == Color.WHITE:
+        buttonsList.append("/")
+        handbrake = True
+    elif handbrake and color.color() == Color.BLACK:
+        buttonsList.append("/") 
+        handbrake = False
 
     sock.send((json.dumps({
         "type": "DATA",
-        "left": (-1 * scrunch(leftLever, leftLeverMAX)),
-        "middle": (-1 * scrunch(middleLever, middleLeverMAX)),
+        "left": None,
+        "middle": scrunch(middleLever, middleLeverMAX),
         "right": (-1 * scrunch(rightLever, rightLeverMAX)),
-        "color": reverser,
+        "color": None,
         "buttons": buttonsList
     }) + "\n").encode())
 
