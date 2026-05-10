@@ -7,7 +7,6 @@ from pybricks.tools import wait
 import json
 import socket
 
-# Initialize hardware
 brick = EV3Brick()
 leftLever = Motor(Port.A)
 middleLever = Motor(Port.B)
@@ -16,7 +15,6 @@ color = ColorSensor(Port.S2)
 touch = TouchSensor(Port.S3)
 beacon = InfraredSensor(Port.S4)
 
-# Load configuration
 with open("assets/specs.json", "r") as f:
     specs = json.load(f)
 leftLeverMAX = specs.get("left")
@@ -26,11 +24,8 @@ rightLeverMAX = specs.get("right")
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((specs.get("HOST"), specs.get("PORT")))
 
-# Unified button map (channel: {button: (sequence)})
 buttons = {
-    -1: {
-        "touch": ("c",)
-    },
+    -1: {"touch": ("c",)},
     0: {
         Button.UP: ("h",),
         Button.LEFT: ("x",)
@@ -40,27 +35,47 @@ buttons = {
         Button.RIGHT_UP: ("f6",),
         Button.LEFT_DOWN: ("f7",),
         Button.RIGHT_DOWN: ("f8",)
-    }, 
-    2: {
-    }, 
+    },
+    2: {},
     3: {
         Button.LEFT_UP: ("l",),
         Button.RIGHT_UP: ("0",),
         Button.LEFT_DOWN: ("9",),
         Button.RIGHT_DOWN: ("b+v",)
-    }, 
+    },
     4: {
         Button.LEFT_UP: ("end",),
         Button.RIGHT_UP: ("down",),
         Button.LEFT_DOWN: ("page down",)
-    }  
+    }
 }
 
-# State trackers
 sequence_index = {ch: {btn: 0 for btn in buttons[ch]} for ch in buttons}
 prev_pressed = {ch: {btn: False for btn in buttons[ch]} for ch in buttons}
 
-# Get current buttons per channel
+def getNotch(lever, levermax, numNotches):
+    if levermax == 0:
+        return 0
+
+    ratio = lever.angle() / levermax
+    ratio = max(0, min(1, ratio))
+    idx = int(ratio * numNotches)
+    if idx >= numNotches:
+        idx = numNotches - 1
+
+    return idx
+
+def evalMove(currTBC, currSS, nextTBC, nextSS):
+    #TBC: 0:ShutDown, 1:Emergency, 2:Service, 3:Lap, 4:Max, 5:Nor, 6:Min, 7:Hold, 8:Off, 9:Shunt, 10:Series, 11:Parallel
+    #SS:  0:ShutDown, 1:Auto, 2:Forward, 3:Inter, 4:Reverse
+    # if currTBC >= 9 and currSS != nextSS:
+    #     return False
+    # if currTBC != nextTBC and nextTBC > 1 and currSS == 0:
+    #     return False
+    # if currTBC < nextTBC and nextTBC == 1 and currSS != 0:
+    #     return False
+    return True
+
 def get_buttons(channel):
     if channel == -1:
         return ["touch"] if touch.pressed() else []
@@ -69,32 +84,24 @@ def get_buttons(channel):
     else:
         return beacon.buttons(channel)
 
-# Handle all inputs
 def handle_buttons(mapping, index_map, prev_map):
-    output = []
-
+    out = []
     for ch in mapping:
         current = get_buttons(ch)
-
-        for btn, sequence in mapping[ch].items():
+        for btn, seq in mapping[ch].items():
             is_pressed = btn in current
             was_pressed = prev_map[ch][btn]
 
-            # Output current sequence while button is held
             if is_pressed:
-                key = sequence[index_map[ch][btn]]
-                output.append(key)
+                out.append(seq[index_map[ch][btn]])
 
-            # Advance sequence only after full release + next press (falling edge then rising edge)
-            if was_pressed and not is_pressed and len(sequence) > 1:
-                index_map[ch][btn] = (index_map[ch][btn] + 1) % len(sequence)
+            if was_pressed and not is_pressed and len(seq) > 1:
+                index_map[ch][btn] = (index_map[ch][btn] + 1) % len(seq)
 
-            # Update previous press state
             prev_map[ch][btn] = is_pressed
+    return out
 
-    return output
-
-brick.screen.load_image("assets/images/TSC C69 Stock.png")
+brick.screen.load_image("assets/images/WoS C69 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
@@ -106,6 +113,9 @@ sock.send((json.dumps({
 
 deadman = False
 
+TBCnotch = 0
+SSnotch = 0
+
 while True:
     if Button.CENTER in brick.buttons.pressed():
         sock.send((json.dumps({
@@ -116,13 +126,26 @@ while True:
     
     buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
 
-    # Special Stuff
-    # Check deadman
+    newTBC = getNotch(leftLever, leftLeverMAX, 12)
+    newSS = getNotch(rightLever, rightLeverMAX, 5)
+    if newTBC != TBCnotch or newSS != SSnotch:
+        if evalMove(TBCnotch, SSnotch, newTBC, newSS):
+            if newTBC < TBCnotch:
+                buttonsList.append("d")
+            elif newTBC > TBCnotch:
+                buttonsList.append("a")
+            if newSS < SSnotch:
+                buttonsList.append("s")
+            elif newSS > SSnotch:
+                buttonsList.append("w")
+    TBCnotch = newTBC
+    SSnotch = newSS
+
     if not deadman and color.color() == Color.WHITE:
-        buttonsList.append("tab")
+        buttonsList.append("/")
         deadman = True
     elif deadman and color.color() == Color.BLACK:
-        buttonsList.append("tab") 
+        buttonsList.append("/") 
         deadman = False
 
     sock.send((json.dumps({

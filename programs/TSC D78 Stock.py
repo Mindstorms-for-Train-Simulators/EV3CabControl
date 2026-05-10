@@ -131,8 +131,6 @@ while True:
     
     buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
 
-    # Special Stuff
-    # Check handbrake
     if not handbrake and color.color() == Color.WHITE:
         buttonsList.append("/")
         handbrake = True

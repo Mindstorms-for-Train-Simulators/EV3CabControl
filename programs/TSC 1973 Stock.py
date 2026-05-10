@@ -107,7 +107,7 @@ def handle_buttons(mapping, index_map, prev_map):
 
     return output
 
-brick.screen.load_image("assets/images/TSC C69 Stock.png")
+brick.screen.load_image("assets/images/TSC 1973 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
@@ -129,8 +129,6 @@ while True:
     
     buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
 
-    # Special Stuff
-    # Check handbrake
     if not handbrake and color.color() == Color.WHITE:
         buttonsList.append("/")
         handbrake = True
