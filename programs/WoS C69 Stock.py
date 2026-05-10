@@ -53,28 +53,46 @@ buttons = {
 sequence_index = {ch: {btn: 0 for btn in buttons[ch]} for ch in buttons}
 prev_pressed = {ch: {btn: False for btn in buttons[ch]} for ch in buttons}
 
-def getNotch(lever, levermax, numNotches):
-    if levermax == 0:
-        return 0
+class LeverOutput:
+    def __init__(self, lever, levermax, num_notches, toNext, toBack):
+        self.lever = lever
+        self.levermax = levermax
+        self.num_notches = num_notches
+        self.last = 0
+        self.next = toNext
+        self.back = toBack
+        self.cooldown = 0
+        self.pending = 0
 
-    ratio = lever.angle() / levermax
-    ratio = max(0, min(1, ratio))
-    idx = int(ratio * numNotches)
-    if idx >= numNotches:
-        idx = numNotches - 1
+    def get_notch(self):
+        if not self.levermax:
+            return 0
+        r = max(0, min(1, self.lever.angle() / self.levermax))
+        i = int(r * self.num_notches)
+        return min(i, self.num_notches - 1)
 
-    return idx
+    def update(self):
+        current = self.get_notch()
+        out = []
 
-def evalMove(currTBC, currSS, nextTBC, nextSS):
-    #TBC: 0:ShutDown, 1:Emergency, 2:Service, 3:Lap, 4:Max, 5:Nor, 6:Min, 7:Hold, 8:Off, 9:Shunt, 10:Series, 11:Parallel
-    #SS:  0:ShutDown, 1:Auto, 2:Forward, 3:Inter, 4:Reverse
-    # if currTBC >= 9 and currSS != nextSS:
-    #     return False
-    # if currTBC != nextTBC and nextTBC > 1 and currSS == 0:
-    #     return False
-    # if currTBC < nextTBC and nextTBC == 1 and currSS != 0:
-    #     return False
-    return True
+        delta = current - self.last
+
+        if self.cooldown:
+            self.cooldown = 0
+            return out
+
+        if delta != 0:
+            step = 1 if delta > 0 else -1
+
+            self.last += step
+            self.cooldown = 1
+
+            out.append(self.next if step > 0 else self.back)
+
+        return out
+
+tbc_axis = LeverOutput(leftLever, leftLeverMAX, 12, "a", "d")
+ss_axis = LeverOutput(rightLever, rightLeverMAX, 5, "w", "s")
 
 def get_buttons(channel):
     if channel == -1:
@@ -83,6 +101,7 @@ def get_buttons(channel):
         return brick.buttons.pressed()
     else:
         return beacon.buttons(channel)
+
 
 def handle_buttons(mapping, index_map, prev_map):
     out = []
@@ -101,6 +120,7 @@ def handle_buttons(mapping, index_map, prev_map):
             prev_map[ch][btn] = is_pressed
     return out
 
+
 brick.screen.load_image("assets/images/WoS C69 Stock.png")
 
 sock.send((json.dumps({
@@ -113,39 +133,22 @@ sock.send((json.dumps({
 
 deadman = False
 
-TBCnotch = 0
-SSnotch = 0
-
 while True:
     if Button.CENTER in brick.buttons.pressed():
-        sock.send((json.dumps({
-            "type": "END",
-        }) + "\n").encode())
+        sock.send((json.dumps({"type": "END"}) + "\n").encode())
         sock.close()
         break
-    
+
     buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
 
-    newTBC = getNotch(leftLever, leftLeverMAX, 12)
-    newSS = getNotch(rightLever, rightLeverMAX, 5)
-    if newTBC != TBCnotch or newSS != SSnotch:
-        if evalMove(TBCnotch, SSnotch, newTBC, newSS):
-            if newTBC < TBCnotch:
-                buttonsList.append("d")
-            elif newTBC > TBCnotch:
-                buttonsList.append("a")
-            if newSS < SSnotch:
-                buttonsList.append("s")
-            elif newSS > SSnotch:
-                buttonsList.append("w")
-    TBCnotch = newTBC
-    SSnotch = newSS
+    buttonsList.extend(tbc_axis.update())
+    buttonsList.extend(ss_axis.update())
 
     if not deadman and color.color() == Color.WHITE:
-        buttonsList.append("/")
+        buttonsList.append("tab")
         deadman = True
     elif deadman and color.color() == Color.BLACK:
-        buttonsList.append("/") 
+        buttonsList.append("tab")
         deadman = False
 
     sock.send((json.dumps({
