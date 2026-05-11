@@ -27,8 +27,9 @@ sock.connect((specs.get("HOST"), specs.get("PORT")))
 buttons = {
     -1: {"touch": ("delete",)},
     0: {
-        Button.UP: ("enter",),
-        Button.DOWN: ("insert",),
+        Button.UP: ("add",),
+        Button.DOWN: ("enter",),
+        Button.LEFT: ("insert",),
         Button.RIGHT: ("1",)
     },
     1: {
