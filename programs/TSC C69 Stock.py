@@ -44,8 +44,8 @@ buttons = {
         Button.RIGHT_DOWN: ("shift+o",)
     }, 
     2: {
-        Button.RIGHT_UP: ("page up",),
-        Button.RIGHT_DOWN: ("page down",)
+        Button.RIGHT_UP: ("pageup",),
+        Button.RIGHT_DOWN: ("pagedown",)
     }, 
     3: {
         Button.LEFT_UP: ("h", "shift+h",),

@@ -60,45 +60,58 @@ sequence_index = {ch: {btn: 0 for btn in buttons[ch]} for ch in buttons}
 prev_pressed = {ch: {btn: False for btn in buttons[ch]} for ch in buttons}
 
 class LeverOutput:
-    def __init__(self, lever, levermax, num_notches, toNext, toBack):
+    def __init__(self, lever, levermax, num_notches, toNext, toBack, cooldown, duration):
         self.lever = lever
         self.levermax = levermax
         self.num_notches = num_notches
         self.last = 0
         self.next = toNext
         self.back = toBack
-        self.cooldown = 0
-        self.pending = 0
+        self.cooldowncount = 0
+        self.cooldown = cooldown
+        self.durationcount = 0
+        self.duration = duration
+        self.pending = None
 
     def get_notch(self):
         if not self.levermax:
             return 0
+
         r = max(0, min(1, self.lever.angle() / self.levermax))
-        i = int(r * self.num_notches)
-        return min(i, self.num_notches - 1)
+        i = int(r * (self.num_notches - 1))
+        return i
 
     def update(self):
         current = self.get_notch()
         out = []
 
-        delta = current - self.last
-
-        if self.cooldown:
-            self.cooldown = 0
+        if self.durationcount > 0:
+            self.durationcount -= 1
+            if self.pending:
+                out.append(self.pending)
             return out
+
+        if self.cooldowncount > 0:
+            self.cooldowncount -= 1
+            return out
+
+        delta = current - self.last
 
         if delta != 0:
             step = 1 if delta > 0 else -1
-
             self.last += step
-            self.cooldown = 1
+            self.pending = self.next if step > 0 else self.back
+            self.durationcount = self.duration
+            self.cooldowncount = self.cooldown
+            out.append(self.pending)
 
-            out.append(self.next if step > 0 else self.back)
+        else:
+            self.pending = None
 
         return out
 
-tbc_axis = LeverOutput(middleLever, middleLeverMAX, 7, "z", "q")
-ss_axis = LeverOutput(rightLever, rightLeverMAX, 6, "page down", "page up")
+tbc_axis = LeverOutput(middleLever, middleLeverMAX, 8, "z", "q", 1, 2)
+ss_axis = LeverOutput(rightLever, rightLeverMAX, 6, "pagedown", "pageup", 12, 3)
 
 def get_buttons(channel):
     if channel == -1:
@@ -127,7 +140,7 @@ def handle_buttons(mapping, index_map, prev_map):
     return out
 
 
-brick.screen.load_image("assets/images/WoS C69 Stock.png")
+brick.screen.load_image("assets/images/BVE 1996 Stock.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
