@@ -29,26 +29,28 @@ sock.connect((specs.get("HOST"), specs.get("PORT")))
 # Unified button map (channel: {button: (sequence)})
 buttons = {
     -1: {
-        "touch": ("shift+w", "shift+s")
     },
     0: {
         Button.UP: ("space",),
         Button.DOWN: ("b",),
-        Button.LEFT: ("v", "v", "shift+v", "shift+v"),
-        Button.RIGHT: ("right",)
+        Button.LEFT: ("v",),
+        Button.RIGHT: ("q",)
     },
     1: {
-        Button.LEFT_UP: ("t+u", "r"),
-        Button.RIGHT_UP: ("t+o", "r"),
-        Button.LEFT_DOWN: ("ctrl+u", "shift+u"),
-        Button.RIGHT_DOWN: ("ctrl+o", "shift+o")
+        Button.LEFT_UP: ("t",),
+        Button.RIGHT_UP: ("t",),
     }, 
     2: {
+        Button.LEFT_UP: ("x",),
+        Button.LEFT_DOWN: ("ctrl+d",)
     }, 
     3: {
-
+        Button.LEFT_UP: ("h", "h", "shift+h", "shift+h"),
+        Button.RIGHT_UP: ("p",),
+        Button.LEFT_DOWN: ("l",),
+        Button.RIGHT_DOWN: ("k+j",)
     }, 
-    4: {
+    4: { # Cameras
         Button.LEFT_UP: ("1",),
         Button.RIGHT_UP: ("2",),
         Button.LEFT_DOWN: ("3",),
@@ -102,17 +104,22 @@ def handle_buttons(mapping, index_map, prev_map):
 
     return output
 
-brick.screen.load_image("assets/images/TSC S7+1 Stock.png")
+brick.screen.load_image("assets/images/TSC F40PH.png")
 
 sock.send((json.dumps({
     "type": "CONFIG",
-    "left": "ThrottleAndBrake",
-    "middle": None,
-    "right": "Reverser",
-    "color": None
+    "left": "Throttle",
+    "middle": "TrainBrake",
+    "right": "LocoBrake",
+    "color": "Reverser"
 }) + "\n").encode())
 
-deadman = False
+handbrake = False
+
+middleLever.run_target(180, middleLeverMAX/2)
+middleLever.stop()
+leftLever.run_target(180, leftLeverMAX)
+leftLever.stop()
 
 while True:
     if Button.CENTER in brick.buttons.pressed():
@@ -124,21 +131,19 @@ while True:
     
     buttonsList = handle_buttons(buttons, sequence_index, prev_pressed)
 
-    # Special Stuff
-    # Check deadman
-    if not deadman and color.color() == Color.WHITE:
-        buttonsList.append("shift+e")
-        deadman = True
-    elif deadman and color.color() == Color.BLACK:
-        buttonsList.append("shift+e") 
-        deadman = False
+    if not handbrake and color.color() == Color.WHITE:
+        buttonsList.append("/")
+        handbrake = True
+    elif handbrake and color.color() == Color.BLACK:
+        buttonsList.append("/") 
+        handbrake = False
 
     sock.send((json.dumps({
         "type": "DATA",
-        "left": scrunch(leftLever, leftLeverMAX),
-        "middle": None,
-        "right": (-1 * scrunch(rightLever, rightLeverMAX)),
-        "color": None,
+        "left": -1*scrunch(leftLever, leftLeverMAX),
+        "middle": -1*scrunch(middleLever, middleLeverMAX),
+        "right": -1*scrunch(rightLever, rightLeverMAX),
+        "color": str(color.color()) + "inv",
         "buttons": buttonsList
     }) + "\n").encode())
 

@@ -57,7 +57,7 @@ buttons = {
         Button.LEFT_UP: ("1",),
         Button.RIGHT_UP: ("2",),
         Button.LEFT_DOWN: ("3",),
-        Button.RIGHT_DOWN: ("8",)
+        Button.RIGHT_DOWN: ("4",)
     }  
 }
 
