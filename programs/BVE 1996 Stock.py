@@ -111,7 +111,7 @@ class LeverOutput:
         return out
 
 tbc_axis = LeverOutput(middleLever, middleLeverMAX, 8, "z", "q", 1, 2)
-ss_axis = LeverOutput(rightLever, rightLeverMAX, 6, "pagedown", "pageup", 12, 3)
+ss_axis = LeverOutput(rightLever, rightLeverMAX, 6, "pagedown", "pageup", 5, 5)
 
 def get_buttons(channel):
     if channel == -1:
